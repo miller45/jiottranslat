@@ -1,0 +1,12 @@
+[mqtt]
+server_address = 192.168.0.xxx
+
+base_topic = heatingpi
+tele_period = 5000
+
+[control]
+poll_period = 1000
+
+[sensors]
+T1=28-3c01f0964f8c
+T2=28-3c01f0965e56

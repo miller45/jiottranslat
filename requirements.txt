@@ -1,0 +1,10 @@
+RPI.GPIO
+spidev
+json
+configparser
+paho-mqtt
+Adafruit-GPIO
+Adafruit-PureIO
+Adafruit-SSD1306
+Pillow
+
