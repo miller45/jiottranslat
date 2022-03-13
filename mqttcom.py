@@ -37,7 +37,7 @@ class MQTTComm:
     def pingTime(self, delta):
         self.timeMS = self.timeMS + delta
         if 0 < self.nextEventTime <= self.timeMS:
-            print "elasped {}".format(self.nextEventTime)
+            # print("elasped {}".format(self.nextEventTime))
             self.nextEventTime = -1
             if self.nextEventMsg == 'POWER1-2:OFF' and self.nextEventTgt:
                 self.nextEventMsg = ""
