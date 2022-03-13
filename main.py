@@ -4,7 +4,7 @@ import configparser
 import math
 import time
 
-print("Starting Jutzi IO Translator")
+print("Starting Rollershutter IO Translator")
 
 
 hpConfig = configparser.ConfigParser()

@@ -1,2 +1,3 @@
 # jiotranslate
-family project: translate rollershutter commands to two relays
+family project: translate MQTT rollershutter commands to two signle MQTT relays
+e
