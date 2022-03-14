@@ -45,19 +45,6 @@ class MQTTComm:
                 self.sendToReal(self.nextEventTgt, "POWER2", "OFF")
 
 
-
-
-    def switchOnOff(self, which, what):
-        if which in self.swState:
-            if self.swState[which] != what:
-                self.client.publish("cmnd/sonoff/" + which + "/POWER", what)
-                self.swState[which]=what
-                print("switching "+which+" "+what)
-        else:
-            self.client.publish("cmnd/sonoff/" + which + "/POWER", what)
-            self.swState[which] = what
-            print("switching " + which + " " + what)
-
     def on_connect(self, client, userdata, flags, rc):
         print("Connect with result code " + str(rc))
 
@@ -95,10 +82,6 @@ class MQTTComm:
         # if(msg.topic.ends)
 
         print(msg.topic + " " + str(msg.payload))
-
-    def sendState(self, itemName, value):
-        self.client.publish(path.join(self.result_topic, itemName), value)
-
 
     def sendToReal(self, itemName,switchName, value):
         self.client.publish(path.join(self.actuator_topic, itemName, switchName), value)
