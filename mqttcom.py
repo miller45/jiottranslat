@@ -33,7 +33,7 @@ class MQTTComm:
 
     def ping(self):
         print("ping from mqtt")
-        self.client.publish(path.join(self.roller_topic, "STATUS"), "Ping from heatingpi")
+        self.client.publish(path.join(self.roller_topic, "STATUS"), "Ping from jiottranslat")
     def pingTime(self, delta):
         self.timeMS = self.timeMS + delta
         if 0 < self.nextEventTime <= self.timeMS:
