@@ -1,0 +1,2 @@
+
+Rollershutter OFFICEBLINDS1 "Office 1 Blinds"  (Offices) {mqtt=">[mosq:cmnd/jviot/58J:command:UP:BLINDSUP],>[mosq:cmnd/jviot/58J:command:DOWN:BLINDSDOWN],>[mosq:cmnd/jviot/58J:command:STOP:BLINDSSTOP],<[mosq:stat/jviot/58J/BLINDS:state:default]", autoupdate="false"}
