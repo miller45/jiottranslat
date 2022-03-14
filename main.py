@@ -32,6 +32,7 @@ while onon:
 
             if lstateCounter != mqttClient.stateCounter:
                 lstateCounter = mqttClient.stateCounter
+            time.sleep(0.01)
 
     except BaseException as error:
         print('An exception occurred') #: {}'.format(error))
