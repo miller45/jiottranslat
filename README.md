@@ -16,3 +16,6 @@ or
 to
 `cmnd/sonoff/B56C52/POWER1 ON` `cmnd/sonoff/B56C52/POWER2 OFF`
 
+#Diagram
+
+![diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/miller45/jiottranslat/master/diagram.iuml)
