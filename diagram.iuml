@@ -1,0 +1,13 @@
+@startuml
+actor resident
+node rollershutter_openhab
+node mqtt
+node jiottranslate
+node mixing_valve
+
+resident --> rollershutter_openhab
+rollershutter_openhab --> mqtt
+mqtt <--> jiottranslate
+mqtt ->mixing_valve
+
+@enduml

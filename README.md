@@ -1,8 +1,18 @@
 # jiottranslate
 family project: translate MQTT rollershutter commands to two single MQTT relay commands
-e.g. 
+
 e.g. 
 `cmnd/jviot/B56C52 BLINDSDOWN`
 is "converted" to 
-cmnd/sonoff/B56C52/POWER1 OFF
-cmnd/sonoff/B56C52/POWER2 ON
+`cmnd/sonoff/B56C52/POWER1 OFF` `cmnd/sonoff/B56C52/POWER2 ON`
+
+or
+`cmnd/jviot/B56C52 BLINDSSTOP`
+to
+`cmnd/sonoff/B56C52/POWER1 OFF` `cmnd/sonoff/B56C52/POWER2 OFF`
+
+or
+`cmnd/jviot/B56C52 BLINDSUP`
+to
+`cmnd/sonoff/B56C52/POWER1 ON` `cmnd/sonoff/B56C52/POWER2 OFF`
+
