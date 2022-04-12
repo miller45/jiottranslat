@@ -27,8 +27,9 @@ while onon:
         while True:
             currtime = math.trunc(time.time() * 1000)  # time in microseconds
             if currtime - pollPeriod > ltime:
+                delta = currtime - ltime
                 ltime = currtime
-                mqttClient.pingTime(pollPeriod)  # ping the client to do timebased events
+                mqttClient.ping_time(delta)  # ping the client to do timebased events
 
             if lstateCounter != mqttClient.stateCounter:
                 lstateCounter = mqttClient.stateCounter

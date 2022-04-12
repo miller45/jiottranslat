@@ -1,6 +1,18 @@
 import paho.mqtt.client as mqtt
 import posixpath as path
 
+
+class Eintrag:
+    nextEventTime = -1
+    nextEventMsg = ""
+    nextEventTgt = ""
+
+    def __init__(self,event_time, event_msg, event_tgt):
+        self.nextEventTime=event_time
+        self.nextEventMsg=event_msg
+        self.nextEventTgt=event_tgt
+
+
 class MQTTComm:
     swState = {}
     stateCounter = 0
@@ -8,6 +20,7 @@ class MQTTComm:
     nextEventTime = -1
     nextEventMsg = ""
     nextEventTgt = ""
+    connected = False
 
     def __init__(self, server_address, real_topic, virtual_topic):
         self.server_address = server_address
@@ -16,7 +29,7 @@ class MQTTComm:
         self.actuator_topic = path.join("cmnd", real_topic)
         self.roller_topic = path.join("cmnd", virtual_topic)
         self.result_topic = path.join("stat", virtual_topic)
-        print(self.roller_topic)
+        print("roller topic: ", self.roller_topic)
 
         self.client = mqtt.Client()
         self.connect()
@@ -34,19 +47,20 @@ class MQTTComm:
     def ping(self):
         print("ping from mqtt")
         self.client.publish(path.join(self.roller_topic, "STATUS"), "Ping from jiottranslat")
-    def pingTime(self, delta):
+
+    def ping_time(self, delta):
         self.timeMS = self.timeMS + delta
         if 0 < self.nextEventTime <= self.timeMS:
             # print("elasped {}".format(self.nextEventTime))
             self.nextEventTime = -1
             if self.nextEventMsg == 'POWER1-2:OFF' and self.nextEventTgt:
                 self.nextEventMsg = ""
-                self.sendToReal(self.nextEventTgt, "POWER1", "OFF")
-                self.sendToReal(self.nextEventTgt, "POWER2", "OFF")
-
+                self.send_to_real(self.nextEventTgt, "POWER1", "OFF")
+                self.send_to_real(self.nextEventTgt, "POWER2", "OFF")
 
     def on_connect(self, client, userdata, flags, rc):
         print("Connect with result code " + str(rc))
+        self.connected = True
 
     def on_message(self, client, userdata, msg):
         # (head, tail) = path.split(msg.topic)
@@ -57,19 +71,19 @@ class MQTTComm:
             laststate = self.swState.get(item, "")
             if msg.payload == "BLINDSUP":
                 self.swState[item] = "BLINDSUP"
-                self.sendToReal(item, "POWER1", "ON")
-                self.sendToReal(item, "POWER2", "OFF")
+                self.send_to_real(item, "POWER1", "ON")
+                self.send_to_real(item, "POWER2", "OFF")
                 print("Getting Up")
             elif msg.payload == "BLINDSDOWN":
                 self.swState[item] = "BLINDSDOWN"
-                self.sendToReal(item, "POWER1", "OFF")
-                self.sendToReal(item, "POWER2", "ON")
+                self.send_to_real(item, "POWER1", "OFF")
+                self.send_to_real(item, "POWER2", "ON")
                 print("Getting DOWN")
             elif msg.payload == "BLINDSSTOP":
                 print("Getting STOP")
                 if laststate == "BLINDSSTOP":
-                    self.sendToReal(item, "POWER1", "ON")
-                    self.sendToReal(item, "POWER2", "ON")
+                    self.send_to_real(item, "POWER1", "ON")
+                    self.send_to_real(item, "POWER2", "ON")
                     self.nextEventTgt = ""
                     self.nextEventTime = self.timeMS + 100
                     self.nextEventMsg = "POWER1-2:OFF"
@@ -83,8 +97,9 @@ class MQTTComm:
 
         print(msg.topic + " " + str(msg.payload))
 
-    def sendToReal(self, itemName,switchName, value):
+    def send_to_real(self, itemName, switchName, value):
         self.client.publish(path.join(self.actuator_topic, itemName, switchName), value)
+
 
 
 
