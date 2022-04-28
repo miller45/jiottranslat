@@ -8,6 +8,6 @@ node mixing_valve
 resident --> rollershutter_openhab
 rollershutter_openhab --> mqtt
 mqtt <--> jiottranslate
-mqtt ->mixing_valve
+mqtt ->rollershutter_controller
 
 @enduml
