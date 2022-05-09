@@ -3,6 +3,7 @@ import mqttcom
 import configparser
 import math
 import time
+import syslog
 
 print("Starting Rollershutter IO Translator")
 
@@ -22,6 +23,10 @@ spamltime = 0
 
 onon = True
 
+def slog(msg):
+    syslog.syslog(msg)
+    print(msg)
+
 while onon:
     try:
         while True:
@@ -36,12 +41,12 @@ while onon:
             time.sleep(0.01)
 
     except BaseException as error:
-        print('An exception occurred') #: {}'.format(error))
-        print('{}: {}'.format(type(error).__name__, error))
+        slog('An exception occurred') #: {}'.format(error))
+        slog('{}: {}'.format(type(error).__name__, error))
         if type(error) == KeyboardInterrupt:
             exit(0)
-        print("restarting after 5 secs")
+        slog("restarting after 5 secs")
         time.sleep(5)
     except:
-        print("exception occurred restarting after 1 secs")
+        slog("exception occurred restarting after 1 secs")
         time.sleep(1)

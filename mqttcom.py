@@ -1,5 +1,6 @@
 import paho.mqtt.client as mqtt
 import posixpath as path
+import syslog
 
 
 class Eintrag:
@@ -27,7 +28,7 @@ class MQTTComm:
         self.actuator_topic = path.join("cmnd", real_topic)
         self.roller_topic = path.join("cmnd", virtual_topic)
         self.result_topic = path.join("stat", virtual_topic)
-        print("roller topic: ", self.roller_topic)
+        self.slog("roller topic: {}".format(self.roller_topic))
 
         self.client = mqtt.Client()
         self.connect()
@@ -43,8 +44,8 @@ class MQTTComm:
         )  # the hash symbol means we get all message from sensors*
 
     def ping(self):
-        print("ping called")
-        self.client.publish(path.join(self.roller_topic, "STATUS"), "Ping from jiottranslat v2.0")
+        self.slog("ping called")
+        self.client.publish(path.join(self.roller_topic, "STATUS"), "Ping from jiottranslat v2.1")
 
     def ping_time(self, delta):
         self.timeMS = self.timeMS + delta
@@ -57,11 +58,10 @@ class MQTTComm:
             for td in todos:
                 (swiname, onoff) = td.nextEventMsg.split(":")
                 self.send_to_real(td.nextEventTgt, swiname, onoff)
-            print("eintrage ueber ", len(self.eintraege))
-
+            self.slog("eintrage ueber {}".format(len(self.eintraege)))
 
     def on_connect(self, client, userdata, flags, rc):
-        print("Connect with result code " + str(rc))
+        self.slog("Connect with result code " + str(rc))
         self.connected = True
 
     def on_message(self, client, userdata, msg):
@@ -75,14 +75,14 @@ class MQTTComm:
                 self.swState[item] = "BLINDSUP"
                 self.send_to_real(item, "POWER1", "ON")
                 self.send_to_real(item, "POWER2", "OFF")
-                print("Getting Up")
+                self.slog("Getting Up")
             elif msg.payload == "BLINDSDOWN":
                 self.swState[item] = "BLINDSDOWN"
                 self.send_to_real(item, "POWER1", "OFF")
                 self.send_to_real(item, "POWER2", "ON")
-                print("Getting DOWN")
+                self.slog("Getting DOWN")
             elif msg.payload == "BLINDSSTOP":
-                print("Getting STOP")
+                self.slog("Getting STOP")
                 if laststate == "BLINDSSTOP":
                     self.send_to_real(item, "POWER1", "ON")
                     self.send_to_real(item, "POWER2", "ON")
@@ -95,7 +95,7 @@ class MQTTComm:
         self.stateCounter = self.stateCounter + 1
         # if(msg.topic.ends)
 
-        print(msg.topic + " " + str(msg.payload))
+        self.slog(msg.topic + " " + str(msg.payload))
 
     def enqueue_next_event(self, event_time, event_msg, event_tgt):
         entry = Eintrag(event_time, event_msg, event_tgt)
@@ -103,3 +103,7 @@ class MQTTComm:
 
     def send_to_real(self, item_name, switch_name, value):
         self.client.publish(path.join(self.actuator_topic, item_name, switch_name), value)
+
+    def slog(self, msg):
+        syslog.syslog(msg)
+        print(msg)
