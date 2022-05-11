@@ -28,13 +28,13 @@ class MQTTComm:
         self.actuator_topic = path.join("cmnd", real_topic)
         self.roller_topic = path.join("cmnd", virtual_topic)
         self.result_topic = path.join("stat", virtual_topic)
+        self.tele_topic = path.join("tele", virtual_topic)
         self.slog("roller topic: {}".format(self.roller_topic))
 
         self.client = mqtt.Client()
         self.connect()
 
     def connect(self):
-
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.client.connect(self.server_address, 1883, 60)
@@ -103,6 +103,9 @@ class MQTTComm:
 
     def send_to_real(self, item_name, switch_name, value):
         self.client.publish(path.join(self.actuator_topic, item_name, switch_name), value)
+
+    def send_tele(self, stamp):
+        self.client.publish(path.join(self.tele_topic, 'STATE'), "RUNNING {}".format(stamp))
 
     def slog(self, msg):
         syslog.syslog(msg)
