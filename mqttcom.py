@@ -21,7 +21,6 @@ class MQTTComm:
     timeMS = 0
     connected = False
     eintraege = []
-    use_stopped = True # use the stopped state
 
     def __init__(self, server_address, real_topic, virtual_topic, shutter_names):
         self.server_address = server_address
@@ -51,7 +50,7 @@ class MQTTComm:
 
     def ping(self):
         self.slog("ping called")
-        self.client.publish(path.join(self.roller_topic, "STATUS"), "Ping from jiottranslat v2.1")
+        self.client.publish(path.join(self.tele_topic, "STATUS"), "Ping from jiottranslat v2.1")
 
     def ping_time(self, delta):
         self.timeMS = self.timeMS + delta
@@ -74,7 +73,7 @@ class MQTTComm:
             shtp = path.join(self.result_topic, shutn, "position")
             self.client.publish(shtp, payload="50", qos=0, retain=False)
             shop = path.join(self.result_topic, shutn, "operation")
-            self.client.publish(shop, payload="open", qos=0, retain=False)
+            self.client.publish(shop, payload="stopped", qos=0, retain=False)
 
     def on_message(self, client, userdata, msg):
         # (head, tail) = path.split(msg.topic)
@@ -109,15 +108,12 @@ class MQTTComm:
                                         retain=False)
                 elif payload == "STOP":
                     self.slog("home assissant stop")
-                    prev_state = "closed"
-                    if item in self.swState:
-                        prev_state = self.swState[item]
                     self.send_to_real(item, "POWER1", "ON")
                     self.send_to_real(item, "POWER2", "ON")
                     self.swState[item] = "BLINDSSTOP2"
                     self.enqueue_next_event(self.timeMS + 100, "POWER1:OFF", item)
                     self.enqueue_next_event(self.timeMS + 100, "POWER2:OFF", item)
-                    finstate = "closed" if prev_state == "BLINDSDOWN" else "open"
+                    finstate = "stopped"
                     # Last direction is hint to final state
                     self.client.publish(path.join(self.result_topic, item, "operation"), payload=finstate, qos=0,
                                         retain=False)
