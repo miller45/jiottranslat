@@ -21,6 +21,7 @@ class MQTTComm:
     timeMS = 0
     connected = False
     eintraege = []
+    use_stopped = True # use the stopped state
 
     def __init__(self, server_address, real_topic, virtual_topic, shutter_names):
         self.server_address = server_address
@@ -66,16 +67,64 @@ class MQTTComm:
             self.slog("eintrage ueber {}".format(len(self.eintraege)))
 
     def on_connect(self, client, userdata, flags, rc):
-        self.client.publish(path.join(self.tele_topic, "allshutters","LWT"), payload="Online", qos=0, retain=True)
+        self.client.publish(path.join(self.tele_topic, "allshutters", "LWT"), payload="Online", qos=0, retain=True)
         self.slog("Connect with result code " + str(rc))
         self.connected = True
+        for shutn in self.shutter_names:
+            shtp = path.join(self.result_topic, shutn, "position")
+            self.client.publish(shtp, payload="50", qos=0, retain=False)
+            shop = path.join(self.result_topic, shutn, "operation")
+            self.client.publish(shop, payload="open", qos=0, retain=False)
 
     def on_message(self, client, userdata, msg):
         # (head, tail) = path.split(msg.topic)
-        parts = path.split(msg.topic)
+        parts = msg.topic.split("/")
         item = parts[-1]
+        is_hass = False
+        if item == "set":  # detect home assistant
+            is_hass = True
+            item = parts[-2]  # the name is before the set
         payload = str(msg.payload)
-        if payload and payload.startswith("BLINDS"):
+
+        # home assitant handling
+        if is_hass:
+            if payload:
+                if payload == "OPEN":
+                    self.swState[item] = "BLINDSUP"
+                    self.send_to_real(item, "POWER1", "ON")
+                    self.send_to_real(item, "POWER2", "OFF")
+                    self.slog("home assissent open (UP)")
+                    self.client.publish(path.join(self.result_topic, item, "operation"), payload="opening", qos=0,
+                                        retain=False)
+                    self.client.publish(path.join(self.result_topic, item, "position"), payload="33", qos=0,
+                                        retain=False)
+                elif payload == "CLOSE":
+                    self.swState[item] = "BLINDSDOWN"
+                    self.send_to_real(item, "POWER1", "OFF")
+                    self.send_to_real(item, "POWER2", "ON")
+                    self.slog("home assissant close (DOWN)")
+                    self.client.publish(path.join(self.result_topic, item, "operation"), payload="closing", qos=0,
+                                        retain=False)
+                    self.client.publish(path.join(self.result_topic, item, "position"), payload="66", qos=0,
+                                        retain=False)
+                elif payload == "STOP":
+                    self.slog("home assissant stop")
+                    prev_state = "closed"
+                    if item in self.swState:
+                        prev_state = self.swState[item]
+                    self.send_to_real(item, "POWER1", "ON")
+                    self.send_to_real(item, "POWER2", "ON")
+                    self.swState[item] = "BLINDSSTOP2"
+                    self.enqueue_next_event(self.timeMS + 100, "POWER1:OFF", item)
+                    self.enqueue_next_event(self.timeMS + 100, "POWER2:OFF", item)
+                    finstate = "closed" if prev_state == "BLINDSDOWN" else "open"
+                    # Last direction is hint to final state
+                    self.client.publish(path.join(self.result_topic, item, "operation"), payload=finstate, qos=0,
+                                        retain=False)
+                    # that  is is only for keeping homeassistant happy.  We do not really no were the shutters are
+
+        # openhab handling
+        elif payload and payload.startswith("BLINDS"):
             laststate = self.swState.get(item, "")
             if msg.payload == "BLINDSUP":
                 self.swState[item] = "BLINDSUP"
@@ -110,8 +159,9 @@ class MQTTComm:
     def send_to_real(self, item_name, switch_name, value):
         self.client.publish(path.join(self.actuator_topic, item_name, switch_name), value)
 
-    def send_tele(self, stamp):
-        self.client.publish(path.join(self.tele_topic, 'STATE'), "RUNNING {}".format(stamp))
+    def send_tele(self, stamp, connected):
+        msg = "CONNECTED {}" if connected else "NOT CONNECTED {}"
+        self.client.publish(path.join(self.tele_topic, 'STATE'), msg.format(stamp))
 
     def slog(self, msg):
         syslog.syslog(msg)

@@ -45,10 +45,11 @@ mqttClient = connecit()
 lctime = math.trunc(time.time() * 1000)
 pollPeriod = 100
 check_period = 5000
+tele_period = 60000
 
 lstateCounter = 0
 ltime = 0
-
+lteletime = 0
 
 spamltime = 0
 
@@ -67,9 +68,11 @@ while onon:
                 if not mqttClient.client.is_connected():
                     slog("not connected retrying")
                     mqttClient = connecit()
-                else:
-                    mqttClient.send_tele(currtime)
                 lctime = currtime
+            if currtime - tele_period > lteletime:
+                mqttClient.send_tele(currtime, mqttClient.client.is_connected())
+                lteletime = currtime
+
             if lstateCounter != mqttClient.stateCounter:
                 lstateCounter = mqttClient.stateCounter
             time.sleep(0.01)
