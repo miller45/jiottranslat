@@ -9,6 +9,11 @@ print("Starting Rollershutter IO Translator")
 hpConfig = configparser.ConfigParser()
 hpConfig.read("config.ini")
 
+preshutter_names = hpConfig["mqtt"]["shutter_names"].strip().split(",")
+shutter_names = []
+
+for sn in preshutter_names:
+    shutter_names.append(sn.strip())
 
 def slog(msg):
     syslog.syslog(msg)
@@ -21,7 +26,7 @@ def connecit():
     while doinit:
         try:
             mqttClient = mqttcom.MQTTComm(hpConfig["mqtt"]["server_address"], hpConfig["mqtt"]["real_topic"],
-                                          hpConfig["mqtt"]["virtual_topic"])
+                                          hpConfig["mqtt"]["virtual_topic"], shutter_names)
             doinit = False
             mqttClient.ping()
             return mqttClient

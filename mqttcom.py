@@ -16,12 +16,13 @@ class Eintrag:
 
 class MQTTComm:
     swState = {}
+    last_dir = {}  # last direction of shutters
     stateCounter = 0
     timeMS = 0
     connected = False
     eintraege = []
 
-    def __init__(self, server_address, real_topic, virtual_topic):
+    def __init__(self, server_address, real_topic, virtual_topic, shutter_names):
         self.server_address = server_address
         self.real_topic = real_topic
         self.virtual_topic = virtual_topic
@@ -29,6 +30,8 @@ class MQTTComm:
         self.roller_topic = path.join("cmnd", virtual_topic)
         self.result_topic = path.join("stat", virtual_topic)
         self.tele_topic = path.join("tele", virtual_topic)
+        self.tele_availtopic = path.join("tele/sonoff")  # needed to pass throught availbility of real devices
+        self.shutter_names = shutter_names
         self.slog("roller topic: {}".format(self.roller_topic))
 
         self.client = mqtt.Client()
@@ -37,6 +40,8 @@ class MQTTComm:
     def connect(self):
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
+        self.client.will_set(path.join(self.tele_topic, "allshutters", "LWT"), payload="Offline", qos=0, retain=True)
+
         self.client.connect(self.server_address, 1883, 60)
         self.client.loop_start()
         self.client.subscribe(
@@ -61,6 +66,7 @@ class MQTTComm:
             self.slog("eintrage ueber {}".format(len(self.eintraege)))
 
     def on_connect(self, client, userdata, flags, rc):
+        self.client.publish(path.join(self.tele_topic, "allshutters","LWT"), payload="Online", qos=0, retain=True)
         self.slog("Connect with result code " + str(rc))
         self.connected = True
 
