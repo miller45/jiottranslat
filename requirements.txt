@@ -1,3 +1,2 @@
-json
 configparser
 paho-mqtt
