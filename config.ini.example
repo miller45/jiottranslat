@@ -5,3 +5,4 @@ virtual_topic = jviot
 # send translate commands to cmnd/sonoff/xxxx
 real_topic = sonoff
 
+shutter_names = FAKES21J, FAKES22J, 58J, 59J, 61J, 62J, 63J, 65J, 66J, 67J, 68J, 69J, 70J13DC54
